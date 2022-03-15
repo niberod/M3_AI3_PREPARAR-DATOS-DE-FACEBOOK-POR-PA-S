@@ -1,0 +1,40 @@
+---
+title: 'MODULO 3: DATA MANAGEMENT & DATA DIGITAL'
+author: "Nicolás Bene"
+date: "14/3/2022"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+suppressPackageStartupMessages(library(tidyverse))
+
+#Saco notación científica
+options(scipen=999)
+
+```
+
+## R Markdown
+Tareas que debes realizar:
+
+1. Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
+1. Separa el año y el “indicador” en dos columnas separadas: anyo, variable. Presenta la tabla de las frecuencias de cada nueva variable.
+1. Codifica el nombre de los países en una nueva columna “pais_r” donde, al analizar la tabla de frecuencias cada país, tenga frecuencia 6.
+1. Pivota la tabla a formato wide de forma que cada variable tenga su propia columna y cada país dos filas (una para cada año). Comenta la estructura de la tabla (glimpse).
+1. Transforma las tres variables (Facebook, Internet_por, poblacion) a formato numérico en tres variables nuevas con el sufijo “_num”. Aplica antes la/s transformación/es de las variables de texto que creas conveniente. Presenta el summary de las variables nuevas.
+1. Analiza y comenta si observas alguna otra inconsistencia en los datos preparados.
+1. Escribe cuatro líneas explicando (para un lector no técnico) la penetración de Facebook y de Internet en España.
+
+
+## 1  Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
+
+```{r carga de datos}
+df <- read_csv2(
+      "https://raw.githubusercontent.com/griu/mbdds_fc20/master/gestion_datos/www/Facebook_10_18_raw.csv",
+      locale = locale(
+                      decimal_mark = ",", 
+                      grouping_mark = "."
+                      )
+      )
+```
+
