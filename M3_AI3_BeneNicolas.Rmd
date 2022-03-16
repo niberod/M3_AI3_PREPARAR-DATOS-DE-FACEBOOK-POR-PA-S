@@ -172,10 +172,97 @@ De todas maneras, y a efectos de poder realizar los siguientes ejercicios, se bo
 
 ```{r pivoteo la tabla}
 
+#Pivoteo la tabla y también ordeno por país y año
 df <- df %>% 
-      pivot_wider(names_from = variable, values_from = valor)
+      pivot_wider(names_from = variable, values_from = valor) %>% 
+      arrange(pais,anyo)
+
 
 ```
 
-Hay NAs, lo cual sucede porque tengo valores distintos para los países que se cambiaron.
+Al haber pivoteado, cada país (con la nueva variable) debería tener dos observaciones, lo cual controlo a continuación.
+
+```{r conteo países para controlar}
+
+#Realizo el conteo y filtro aquellos que tienen un conteo distinto a 2
+df %>% 
+     count(pais_r) %>% 
+      filter(n!=2)
+
+```
+
+Nuevamente los países ya vistos anteriormente son los que tienen problema. Analizamos que sucede con estos países.
+
+```{r control países con diferentes nombres}
+
+#Analizo las variables para estos países
+df %>% 
+      filter(
+             pais %in% paises_rep
+      ) 
+
+```
+
+Se observa que quedaron separados diferentes indicadores debido a los diferentes nombres que tenían cada uno de estos paises. Es decir que con un nombre tenían algunos indicadores, y con otro el resto. Esto provocó que al realizar el ***pivot_wider*** quedaran NAs en algunas columnas para estos países. Lo que debo hacer a continuación es colapsar los distintos valores para un mismo país y año, de forma de que no queden NAs. Eso lo hago agrupando por la nueva variable pais_r y anyo, y tomo para las 3 columnas de indicadores el primer valor que no sea NA (de esa forma logro colapsar las filas del mismo país y año). Luego borro los duplicados en términos de ayo y pais_r porque sino se duplicarían los valores.
+
+```{r arreglo los países con NA}
+df <-    
+      df %>% 
+            #agrupo por país y año
+            group_by(pais_r,anyo) %>% 
+            #cambio las variables de indicadores, dejando el primer valor NA
+            mutate_at(.vars =
+                  vars("Internet_por","Facebook","poblacion"),
+                  ~first(na.omit(.))
+                  ) %>%
+            #desagrupo
+            ungroup() %>%
+            #me quedo con solo una observación por país y año
+            distinct(pais_r,anyo,.keep_all = T)
+   
+```
+
+Ahora me fijo nuevamente si hay algún país que esté más de dos veces. 
+```{r controlo nuevamente}
+#Realizo el conteo y filtro aquellos que tienen un conteo distinto a 2
+df %>% 
+     count(pais_r) %>% 
+      filter(n!=2)
+
+#hago un head para ver algunos ejemplos
+df %>% 
+      head()
+
+```
+
+Ahora hay una observación por año y país, que es lo que se buscaba. Se analiza nuevamente como quedaron los países que presentaban NAs.
+
+```{r controlo nuevamente países con diferentes nombres}
+
+#Analizo las variables para estos países
+df %>% 
+      filter(
+             pais %in% paises_rep
+      ) 
+
+```
+Estos países también quedaron con una observación por año. 
+
+Por lo tanto ya se tiene un conjunto de datos ordenado, donde cada fila es una observación (país y año), cada columna una variable, y cada celda un valor. Resta realizar el ***glimpse***.
+
+```{r realizo el glimpse}
+
+df %>% 
+      glimpse
+
+```
+
+Se observa que el dataset cuenta de 156 filas, cada una de las cuales representa la combinación única de un año y un país determinado. Hay dos años distintos, por lo que en total se tienen 78 países.
+El dataset presenta 6 columnas, dos con variables **string** o **character** (pais y pais_r), y cuatro con variable numérica de tipo **double**. 
+Las variables tipo **character** está bien que así lo sean, ya que son nombres de países. 
+El anyo, en su momento se pasó a numérica, y en la medida que se muestre solamente el año sin toda la fecha completa, está bien que se presente así. El resto son indicadores que deben expresarse como número.
+Por lo anteriormente expresado está bien que no se realice una transformación, salvo que se pretendan realizar agrupaciones o discretizar algunas de las variables numéricas.
+
+
+1. Transforma las tres variables (Facebook, Internet_por, poblacion) a formato numérico en tres variables nuevas con el sufijo “_num”. Aplica antes la/s transformación/es de las variables de texto que creas conveniente. Presenta el summary de las variables nuevas.
 
