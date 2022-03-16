@@ -1,8 +1,10 @@
 ---
-title: 'MODULO 3: DATA MANAGEMENT & DATA DIGITAL'
+title: 'TAREA 2 MÓDULO 3'
 author: "Nicolás Bene"
 date: "14/3/2022"
 output: pdf_document
+editor_options: 
+  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -26,9 +28,11 @@ Tareas que debes realizar:
 1. Escribe cuatro líneas explicando (para un lector no técnico) la penetración de Facebook y de Internet en España.
 
 
-## 1  Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
+# 1)  Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
 
-```{r carga de datos}
+```{r carga de datos y análisis del conjunto de datos, message=FALSE}
+
+#Cargo los datos a un data frame
 df <- read_csv2(
       "https://raw.githubusercontent.com/griu/mbdds_fc20/master/gestion_datos/www/Facebook_10_18_raw.csv",
       locale = locale(
@@ -36,5 +40,142 @@ df <- read_csv2(
                       grouping_mark = "."
                       )
       )
+
+#Analizo las primeras observaciones
+df %>% 
+      head()
+
 ```
+Este dataframe no es un conjunto de datos ordenado debido a que dentro de la columna indicador hay dos variables distintas: Facebook, Internet_por y poblacion. Por lo tanto no se cumple la máxima de Wickham que cada variable debe ser una columna. Además, tampoco se cumple la característica de que toda celda debe contener un valor, ya que en cada una de las celdas de la columna indicador hay dos valores: un año y el nombre del indicador.
+Es necesario, entonces, trabajar y ordenar el dataframe para que sea un conjunto de datos ordenado, con cada fila siendo una observación, cada columna una variable, y cada celda poseer un valor único.
+
+# 2)  Separa el año y el “indicador” en dos columnas separadas: anyo, variable. Presenta la tabla de las frecuencias de cada nueva variable.
+
+Para poder separar año y la variable, es necesario usar la función ***separate***. El separador entre año e indicador es "|", pero como el argumento *sep* acepta también expresiones regulares no se puede poner solamente el símbolo "|" ya que este significa "o". Por lo tanto es necesario usar el caracter escapante "\\". Entonces en el argumento *sep* se debe poner "\\\\|", tal como se realiza en el siguiente chunk de código.
+
+```{r separo variables}
+
+#Separo las variables
+df <- df %>% 
+      separate(indicador,into = c("anyo","variable"),sep="\\|")
+
+#Me fijo como quedaron las variables
+df %>% 
+      select(anyo,variable) %>% 
+      head
+
+```
+
+Se observa que la variable anyo quedó como caracter, la paso a numérica, y también realizo la tabla de frecuencias de cada variable.
+
+```{r tabla de frecuencias de anyo}
+
+#Transformo anyo a variable numérica
+df <- df %>% 
+            mutate(anyo = as.numeric(anyo))
+
+#Realizo tabla de frecuencias de anyo
+df %>% 
+      count(anyo, name = "Freq_absoluta") %>%
+      mutate(Freq_relativa = 
+                        round(
+                              Freq_absoluta/sum(Freq_absoluta),
+                              2
+                              )
+      )
+```
+
+Se observa que no hay ningún *NA* en la variable anyo. 
+
+```{r tabla de frecuencias de variable}
+
+#Realizo tabla de frecuencias de variable 
+df %>% 
+      count(variable, name = "Freq_absoluta") %>%
+      mutate(Freq_relativa = 
+                        round(
+                              Freq_absoluta/sum(Freq_absoluta),
+                              2
+                              )
+      )
+```
+
+En esta tabla se observa que la columna variable tampoco tiene missings o *NA*.
+
+#3 Codifica el nombre de los países en una nueva columna “pais_r” donde, al analizar la tabla de frecuencias cada país, tenga frecuencia 6.
+
+Teniendo en cuenta que se muestran dos años, y son 3 indicadores para cada año, cada país ya debería aparecer 6 veces si se realiza el conteo por país. Si esto no sucede es que faltan datos de países (ya se de algún año o algún indicador) y alguno esté más veces, o el mismo país está escrito en nombres distintos. Probablemente lo que suceda es esto último ya que vimos que las columnas año y variable estaban equidistribuidas. Para chequear esto, hago el conteo y filtro para ver todos aquellos países que tengan una frecuencia absoluta distinta a 6.
+
+```{r conteo países}
+
+#me fijo si hay países que estén menos o más de 7 veces, y cuáles son
+df %>% 
+      count(pais) %>% 
+      filter(n!=6)
+
+```
+
+Se observa que hay 3 países, que son Egipto, Rusia y Yemen, que están presentes 6 veces pero con nombres distintos. Es necesario, entonces unificar estos nombres. Creo la variable usando ***mutate***, utilizo un ***case_when*** para asignar nombre según si aparece en algún momento alguno de los 3 países. Para chequear que aparezca el nombre del país uso ***str_detect***.
+
+```{r unifico nombres}
+
+#Creo la variable recodificada pais_r
+df <- df %>% 
+      mutate(
+            pais_r =
+                  case_when(
+                        str_detect(pais,"Egypt") ~ "Egypt",
+                        str_detect(pais,"Russia") ~ "Russia",
+                        str_detect(pais, "Yemen") ~ "Yemen",
+                        T~ pais
+                  )
+            
+      )
+
+```
+
+Ahora me fijo el conteo de todos los países
+
+```{r conteo nuevamente}
+df %>% 
+      count(pais_r) %>% 
+      filter(n!=6)
+```
+
+Se observa que no hay ningún país con una frecuencia distinta a 6. De todas maneras chequeo que hayan quedado bien los países que antes figuraban con distinto nombre.
+
+```{r chequeo países con distinto nombre}
+#Obtengo el nombre de los países que aparecían con diferentes nombres
+paises_rep <- df %>%
+                  count(pais) %>% 
+                  filter(n!=6) %>% 
+                  select(pais) %>% 
+                  pull
+
+#Conteo como aparecen ahora
+df %>% 
+      filter(
+             pais %in% paises_rep
+      ) %>% 
+      count(pais_r)
+
+```
+
+El problema para esos países ya fue resuelto, el resto sigue con el nombre unificado que venía de antes.
+
+
+
+#4) Pivota la tabla a formato wide de forma que cada variable tenga su propia columna y cada país dos filas (una para cada año). Comenta la estructura de la tabla (glimpse).
+
+De todas maneras, y a efectos de poder realizar los siguientes ejercicios, se borran los duplicados en
+
+
+```{r pivoteo la tabla}
+
+df <- df %>% 
+      pivot_wider(names_from = variable, values_from = valor)
+
+```
+
+Hay NAs, lo cual sucede porque tengo valores distintos para los países que se cambiaron.
 
