@@ -1,7 +1,6 @@
 ---
-title: 'TAREA 2 MÓDULO 3'
+title: 'TAREA 3 MÓDULO 3'
 author: "Nicolás Bene"
-date: "14/3/2022"
 output: pdf_document
 editor_options: 
   chunk_output_type: console
@@ -10,25 +9,24 @@ editor_options:
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 suppressPackageStartupMessages(library(tidyverse))
+library(moments)
 
 #Saco notación científica
 options(scipen=999)
 
 ```
 
-## R Markdown
 Tareas que debes realizar:
 
-1. Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
-1. Separa el año y el “indicador” en dos columnas separadas: anyo, variable. Presenta la tabla de las frecuencias de cada nueva variable.
-1. Codifica el nombre de los países en una nueva columna “pais_r” donde, al analizar la tabla de frecuencias cada país, tenga frecuencia 6.
-1. Pivota la tabla a formato wide de forma que cada variable tenga su propia columna y cada país dos filas (una para cada año). Comenta la estructura de la tabla (glimpse).
-1. Transforma las tres variables (Facebook, Internet_por, poblacion) a formato numérico en tres variables nuevas con el sufijo “_num”. Aplica antes la/s transformación/es de las variables de texto que creas conveniente. Presenta el summary de las variables nuevas.
-1. Analiza y comenta si observas alguna otra inconsistencia en los datos preparados.
-1. Escribe cuatro líneas explicando (para un lector no técnico) la penetración de Facebook y de Internet en España.
+1)  Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
+2)  Separa el año y el "indicador" en dos columnas separadas: anyo, variable. Presenta la tabla de las frecuencias de cada nueva variable.
+3)  Codifica el nombre de los países en una nueva columna "pais_r" donde, al analizar la tabla de frecuencias cada país, tenga frecuencia 6.
+4)  Pivota la tabla a formato wide de forma que cada variable tenga su propia columna y cada país dos filas (una para cada año). Comenta la estructura de la tabla (glimpse).
+5)  Transforma las tres variables (Facebook, Internet_por, poblacion) a formato numérico en tres variables nuevas con el sufijo "\_num". Aplica antes la/s transformación/es de las variables de texto que creas conveniente. Presenta el summary de las variables nuevas.
+6)  Analiza y comenta si observas alguna otra inconsistencia en los datos preparados.
+7)  Escribe cuatro líneas explicando (para un lector no técnico) la penetración de Facebook y de Internet en España.
 
-
-# 1)  Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
+# 1) Carga los datos del fichero en un data frame. ¿Por qué no es un conjunto de datos ordenado?
 
 ```{r carga de datos y análisis del conjunto de datos, message=FALSE}
 
@@ -46,12 +44,14 @@ df %>%
       head()
 
 ```
-Este dataframe no es un conjunto de datos ordenado debido a que dentro de la columna indicador hay dos variables distintas: Facebook, Internet_por y poblacion. Por lo tanto no se cumple la máxima de Wickham que cada variable debe ser una columna. Además, tampoco se cumple la característica de que toda celda debe contener un valor, ya que en cada una de las celdas de la columna indicador hay dos valores: un año y el nombre del indicador.
+
+Este dataframe no es un conjunto de datos ordenado debido a que dentro de la columna indicador hay tres variables distintas: Facebook, Internet_por y poblacion. Por lo tanto no se cumple la máxima de Wickham que cada variable debe ser una columna. Tampoco cada fila es una observación, ya que se repite el país y año para cada una de las tres variables mencionadas. Por último, en cada una de las celdas de la columna indicador hay dos valores: un año y el nombre del indicador.Por lo tanto   no se cumple la característica de que toda celda debe contener un valor.
+
 Es necesario, entonces, trabajar y ordenar el dataframe para que sea un conjunto de datos ordenado, con cada fila siendo una observación, cada columna una variable, y cada celda poseer un valor único.
 
-# 2)  Separa el año y el “indicador” en dos columnas separadas: anyo, variable. Presenta la tabla de las frecuencias de cada nueva variable.
+# 2) Separa el año y el "indicador" en dos columnas separadas: anyo, variable. Presenta la tabla de las frecuencias de cada nueva variable.
 
-Para poder separar año y la variable, es necesario usar la función ***separate***. El separador entre año e indicador es "|", pero como el argumento *sep* acepta también expresiones regulares no se puede poner solamente el símbolo "|" ya que este significa "o". Por lo tanto es necesario usar el caracter escapante "\\". Entonces en el argumento *sep* se debe poner "\\\\|", tal como se realiza en el siguiente chunk de código.
+Para poder separar año y la variable, es necesario usar la función ***separate***. El separador entre año e indicador es "\|", pero como el argumento *sep* acepta también expresiones regulares no se puede poner solamente el símbolo "\|" ya que este significa "o". Por lo tanto es necesario usar el caracter escapante "\\". Entonces en el argumento *sep* se debe poner "\\\\\|", tal como se realiza en el siguiente chunk de código.
 
 ```{r separo variables}
 
@@ -85,7 +85,7 @@ df %>%
       )
 ```
 
-Se observa que no hay ningún *NA* en la variable anyo. 
+Se observa que no hay ningún *NA* en la variable anyo, y que tengo la misma cantidad de observaciones en cada año.
 
 ```{r tabla de frecuencias de variable}
 
@@ -100,22 +100,22 @@ df %>%
       )
 ```
 
-En esta tabla se observa que la columna variable tampoco tiene missings o *NA*.
+En esta tabla se observa que la columna variable tampoco tiene missings o *NA*. Además cada una de las variables tiene la misma cantidad de observaciones.
 
-#3 Codifica el nombre de los países en una nueva columna “pais_r” donde, al analizar la tabla de frecuencias cada país, tenga frecuencia 6.
+# 3) Codifica el nombre de los países en una nueva columna "pais_r" donde, al analizar la tabla de frecuencias cada país, tenga frecuencia 6.
 
-Teniendo en cuenta que se muestran dos años, y son 3 indicadores para cada año, cada país ya debería aparecer 6 veces si se realiza el conteo por país. Si esto no sucede es que faltan datos de países (ya se de algún año o algún indicador) y alguno esté más veces, o el mismo país está escrito en nombres distintos. Probablemente lo que suceda es esto último ya que vimos que las columnas año y variable estaban equidistribuidas. Para chequear esto, hago el conteo y filtro para ver todos aquellos países que tengan una frecuencia absoluta distinta a 6.
+Teniendo en cuenta que se muestran dos años, y son 3 indicadores para cada año, cada país ya debería aparecer 6 veces si se realiza el conteo por país. Si esto no sucede es que faltan datos de países (ya sea de algún año o algún indicador) y alguno esté más veces, o el mismo país está escrito con nombres distintos. Probablemente lo que suceda es esto último ya que vimos que las columnas año y variable estaban equidistribuidas. Para chequear esto, hago el conteo y filtro para ver todos aquellos países que tengan una frecuencia absoluta distinta a 6.
 
 ```{r conteo países}
 
-#me fijo si hay países que estén menos o más de 7 veces, y cuáles son
+#me fijo si hay países que estén menos o más de 6 veces, y cuáles son
 df %>% 
       count(pais) %>% 
       filter(n!=6)
 
 ```
 
-Se observa que hay 3 países, que son Egipto, Rusia y Yemen, que están presentes 6 veces pero con nombres distintos. Es necesario, entonces unificar estos nombres. Creo la variable usando ***mutate***, utilizo un ***case_when*** para asignar nombre según si aparece en algún momento alguno de los 3 países. Para chequear que aparezca el nombre del país uso ***str_detect***.
+Se observa que hay 3 países, que son Egipto, Rusia y Yemen, que están presentes 6 veces pero con nombres distintos. Es necesario, entonces unificar estos nombres. Creo la variable pais_r usando ***mutate***, aplicando un ***case_when*** para asignar nombre según si aparece en algún momento alguno de los 3 países. Para chequear que aparezca el nombre del país uso ***str_detect***.
 
 ```{r unifico nombres}
 
@@ -132,19 +132,18 @@ df <- df %>%
             
       )
 
-```
-
-Ahora me fijo el conteo de todos los países
-
-```{r conteo nuevamente}
+#Me fijo nuevamente si hay países que aparezcan menos o más de 6 veces
 df %>% 
       count(pais_r) %>% 
       filter(n!=6)
+
+
 ```
 
-Se observa que no hay ningún país con una frecuencia distinta a 6. De todas maneras chequeo que hayan quedado bien los países que antes figuraban con distinto nombre.
+Se observa que no hay ningún país con una frecuencia distinta a 6. De todas maneras chequeo que hayan quedado bien los países que antes figuraban con nombres diferentes.
 
 ```{r chequeo países con distinto nombre}
+
 #Obtengo el nombre de los países que aparecían con diferentes nombres
 paises_rep <- df %>%
                   count(pais) %>% 
@@ -163,11 +162,7 @@ df %>%
 
 El problema para esos países ya fue resuelto, el resto sigue con el nombre unificado que venía de antes.
 
-
-
-#4) Pivota la tabla a formato wide de forma que cada variable tenga su propia columna y cada país dos filas (una para cada año). Comenta la estructura de la tabla (glimpse).
-
-De todas maneras, y a efectos de poder realizar los siguientes ejercicios, se borran los duplicados en
+# 4) Pivota la tabla a formato wide de forma que cada variable tenga su propia columna y cada país dos filas (una para cada año). Comenta la estructura de la tabla (glimpse).
 
 
 ```{r pivoteo la tabla}
@@ -191,7 +186,7 @@ df %>%
 
 ```
 
-Nuevamente los países ya vistos anteriormente son los que tienen problema. Analizamos que sucede con estos países.
+Nuevamente los países ya vistos anteriormente son los que tienen problema, ya que aparecen 4 veces en vez de 2. Analizamos que sucede con los mismos.
 
 ```{r control países con diferentes nombres}
 
@@ -203,13 +198,13 @@ df %>%
 
 ```
 
-Se observa que quedaron separados diferentes indicadores debido a los diferentes nombres que tenían cada uno de estos paises. Es decir que con un nombre tenían algunos indicadores, y con otro el resto. Esto provocó que al realizar el ***pivot_wider*** quedaran NAs en algunas columnas para estos países. Lo que debo hacer a continuación es colapsar los distintos valores para un mismo país y año, de forma de que no queden NAs. Eso lo hago agrupando por la nueva variable pais_r y anyo, y tomo para las 3 columnas de indicadores el primer valor que no sea NA (de esa forma logro colapsar las filas del mismo país y año). Luego borro los duplicados en términos de ayo y pais_r porque sino se duplicarían los valores.
+Se observa que quedaron separados diferentes indicadores debido a los distintos nombres que tenían cada uno de estos paises. Es decir que con un nombre tenían algunos indicadores, y con otro el resto. Esto provocó que al realizar el ***pivot_wider*** quedaran NAs en algunas columnas para estos países. Lo que debo hacer a continuación es colapsar los distintos valores para un mismo país y año, de forma de que no queden NAs. Eso lo hago agrupando por la nueva variable pais_r y anyo, y tomo para las 3 columnas de indicadores el primer valor que no sea NA (de esa forma logro colapsar las filas del mismo país y año). Luego borro los duplicados en términos de anyo y pais_r porque sino se duplicarían los valores.
 
 ```{r arreglo los países con NA}
 df <-    
       df %>% 
             #agrupo por país y año
-            group_by(pais_r,anyo) %>% 
+            group_by(pais_r, anyo) %>% 
             #cambio las variables de indicadores, dejando el primer valor NA
             mutate_at(.vars =
                   vars("Internet_por","Facebook","poblacion"),
@@ -222,7 +217,8 @@ df <-
    
 ```
 
-Ahora me fijo nuevamente si hay algún país que esté más de dos veces. 
+Ahora me fijo nuevamente si hay algún país que esté más de dos veces. También hago un head para ver como quedó el dataset.
+
 ```{r controlo nuevamente}
 #Realizo el conteo y filtro aquellos que tienen un conteo distinto a 2
 df %>% 
@@ -246,7 +242,8 @@ df %>%
       ) 
 
 ```
-Estos países también quedaron con una observación por año. 
+
+Estos países también quedaron con una observación por año.
 
 Por lo tanto ya se tiene un conjunto de datos ordenado, donde cada fila es una observación (país y año), cada columna una variable, y cada celda un valor. Resta realizar el ***glimpse***.
 
@@ -257,12 +254,122 @@ df %>%
 
 ```
 
-Se observa que el dataset cuenta de 156 filas, cada una de las cuales representa la combinación única de un año y un país determinado. Hay dos años distintos, por lo que en total se tienen 78 países.
-El dataset presenta 6 columnas, dos con variables **string** o **character** (pais y pais_r), y cuatro con variable numérica de tipo **double**. 
-Las variables tipo **character** está bien que así lo sean, ya que son nombres de países. 
-El anyo, en su momento se pasó a numérica, y en la medida que se muestre solamente el año sin toda la fecha completa, está bien que se presente así. El resto son indicadores que deben expresarse como número.
-Por lo anteriormente expresado está bien que no se realice una transformación, salvo que se pretendan realizar agrupaciones o discretizar algunas de las variables numéricas.
+Se observa que el dataset cuenta de 156 filas, cada una de las cuales representa la combinación única de un año y un país determinado. Hay dos años distintos, por lo que en total se tienen 78 países. El dataset presenta 6 columnas, dos con variables **string** o **character** (pais y pais_r), y cuatro con variable numérica de tipo **double**. Las variables de tipo **character** está bien que así lo sean, ya que son nombres de países. El anyo, en su momento se pasó a numérica, y en la medida que se muestre solamente el año sin toda la fecha completa, está bien que se presente así (aunque para realizar algún gráfico puede ser conveniente usarla como **factor**). El resto son indicadores que deben expresarse como números. Por lo anteriormente expresado está bien que no se realice una transformación, salvo que se pretendan realizar agrupaciones o discretizar algunas de las variables numéricas.
+
+# 5) Transforma las tres variables (Facebook, Internet_por, poblacion) a formato numérico en tres variables nuevas con el sufijo "\_num". Aplica antes la/s transformación/es de las variables de texto que creas conveniente. Presenta el summary de las variables nuevas.
+
+En el ***glimpse*** que se ejecutó en la pregunta anterior ya se vió que las tres variables (Facebook, Internet_por, poblacion) ya están en formato numérico, debido a que se usó el comando read_csv2 de readr.
+Por lo tanto solo procedo a realizar el summary solicitado de estas variables.
+
+```{r summary de las tres variables}
+
+df %>% 
+      select(Internet_por,Facebook,poblacion) %>% 
+      summary()
+
+```
+
+El análisis de este summary lo realizo en la siguiente pregunta.
 
 
-1. Transforma las tres variables (Facebook, Internet_por, poblacion) a formato numérico en tres variables nuevas con el sufijo “_num”. Aplica antes la/s transformación/es de las variables de texto que creas conveniente. Presenta el summary de las variables nuevas.
+# 6) Analiza y comenta si observas alguna otra inconsistencia en los datos preparados.
 
+Del summary anterior, surgen algunas dudas de si hay inconsistencias o no.
+
+Se observa primero que nada que en la variable Internet_por hay un NA. Analizo en qué país se da el mismo.
+
+```{r filtro NA en Internet_por}
+
+df %>% 
+ filter(is.na(Internet_por))
+
+
+```
+
+Se observa que el NA corresponde a Taiwán y para el año 2010.
+
+Dejando de lado el NA, en la variable Internet_por los valores de mínimo y máximo parecen razonables, ya que no hay más del 100% ni tampoco hay números negativos.
+
+En el caso de Facebook llama la atención el máximo que es de 300 millones, sobre todo si se lo compara con el tercer cuartil que es de 14 millones. Se puede analizar qué país es, lo cuál se realiza a continuación
+
+```{r análisis 300 millones}
+df %>% 
+      filter(Facebook==max(Facebook))
+
+```
+
+India es el país que tiene mayor cantidad absoluta de usuarios de Facebook, lo cual puede ser posible ya que este país cuenta con una población de 1.331 millones de habitantes en 2020 (<https://es.wikipedia.org/wiki/India#:~:text=1%20372%20065%20957%E2%80%8B%20hab.>). Llama la atención que en población diga 1.352.617. Esto es probablemente porque la población esté expresada en miles, lo que implicaría que en el 2018 India tenía 1.352 millones de personas. De todas maneras hablaré más adelante de la variable poblacion.
+
+Además de haber analizado ese máximo, puede resultar interesante ver un boxplot por año de la variable Facebook para analizar outliers.
+
+```{r boxplot}
+df %>% 
+      ggplot(aes(Facebook,group=anyo,fill= as.factor(anyo)))+
+      geom_boxplot()+
+      ggtitle("Boxplot de cantidad de usuarios de facebook por año \n de países seleccionados")+
+      guides(fill=guide_legend(title="Año"))+
+      xlab("Cantidad de usuarios de facebook")
+
+```
+
+
+En los dos años hay outliers con valores elevados (los puntos que están a la derecha del bigote derecho de la caja), es decir por encima del tercer cuartil más 1,5 veces el rango intercuartílico (IQR). Esto es más evidente en el año 2018. Estos valores extremos pueden deberse o bien a la variabilidad de la propia variable o a problemas de medida de la misma o un tipeo erróneo. En el caso extremo de India en el 2018 ya se vió que se debe a la naturaleza de la propia variable, ya que es un país con mucha población.
+
+De todas maneras se analiza para estos dos años cuáles son estos outliers. Para ello se calcula el primer cuartil, el tercero y el IQR para cada año.
+
+
+```{r}
+
+#Calculo quartiles para cada año
+q1_2010 = quantile(df$Facebook[df$anyo==2010],0.25)
+q3_2010 = quantile(df$Facebook[df$anyo==2010],0.75)
+q1_2018 = quantile(df$Facebook[df$anyo==2018],0.25)
+q3_2018 = quantile(df$Facebook[df$anyo==2018],0.75)
+
+#Calculo IQR para cada año
+IRQ2010 = q3_2010 - q1_2010 
+IRQ2018 = q3_2018 - q1_2018 
+
+df %>% 
+      filter(
+            (Facebook > q3_2018 +1.5*IRQ2018 & anyo==2018) |
+            (Facebook > q3_2010 +1.5*IRQ2010 & anyo==2010)
+            ) %>% 
+      arrange(desc(Facebook)) %>% 
+      arrange(desc(anyo),desc(Facebook))
+
+```
+
+Al ver los outliers  se observa que todos ellos tienen una cantidad de usuarios de Facebook coherente con respecto a su población (ver <https://es.wikipedia.org/wiki/Anexo:Pa%C3%ADses_y_territorios_dependientes_por_poblaci%C3%B3n>). Por lo que los valores elevados podrían deberse a la variabilidad de la propia variable. Eso no quita que no puedan existir errores de medición.
+
+Resta analizar la población. Con respecto a esta variable se vió en el summary que tiene un mínimo de 318 y un máximo de 1.392.730. Los valores así expresados no tienen sentido con respecto a la población ya que, como se vió anteriormente, hay países con miles de millones de habitantes. Lo más probable que esté sucediendo, como ya fuera explicado, es que esta variable esté expresada en miles. Para chequear esto analizaré el país con menos población y el país con más población.
+
+```{r población máximo y mínimo}
+df %>% 
+      filter(poblacion==max(poblacion) | poblacion == min(poblacion))
+
+```
+El país con mpas población es China en el 2018, que si multiplicaramos por mil la variable analizada tendría 1.392 millones de personas.En el caso de Islandia, tenía una población de 318 mil en 2010. Según Wikipedia ( <https://es.wikipedia.org/wiki/Anexo:Pa%C3%ADses_y_territorios_dependientes_por_poblaci%C3%B3n>) estos países tienen actualmente 1.420 millones y 375 mil personas respectivamente. Por lo tanto la información de esta variable si se la multiplica por mil parece coherente.
+
+# 7) Escribe cuatro líneas explicando (para un lector no técnico) la penetración de Facebook y de Internet en España.
+
+A continuación miro los indicadores para el caso de España. Creo dos nuevas variables indicadoras:
+
+      * la variable indicadora porcentaje de población que usa Facebook (para lo cual uso la variable poblacion multiplicada por mil)
+
+      * porcentaje de internautas que usan Facebook
+
+```{r variables España}
+df %>% 
+      filter(pais_r=="Spain") %>% 
+      mutate(
+             pob_tot= poblacion*1000,
+             Facebook_sobre_pob = 100 * Facebook/pob_tot,
+             Facebook_sob_int= Facebook_sobre_pob*100/Internet_por
+      ) %>% 
+      select(anyo, Internet_por,Facebook_sobre_pob,Facebook_sob_int)
+             
+
+```
+
+En el año 2010 en España el 65,8% de las personas usaban internet, y de estas personas poco más de un tercio usaba Facebook. Desde ese año hasta el 2018 los usuarios de internet en España crecieron llegando a ser un 86,1% de la población de ese país. En el caso de Facebook los usuarios aumentaron más del doble, alcanzando a representar prácticamente la mitad de los españoles.
