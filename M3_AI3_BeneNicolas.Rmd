@@ -2,8 +2,6 @@
 title: 'TAREA 3 MÓDULO 3'
 author: "Nicolás Bene"
 output: pdf_document
-editor_options: 
-  chunk_output_type: console
 ---
 
 ```{r setup, include=FALSE}
@@ -30,13 +28,20 @@ Tareas que debes realizar:
 
 ```{r carga de datos y análisis del conjunto de datos, message=FALSE}
 
+#Creo la URL para bajar los datos. Lo hago así para que sea más fácilmente visible en 
+#el PDF, además esto permitiría automatización en caso de que fuera necesario cargar más
+#archivos desde github.
+urlRemote  <- "https://raw.githubusercontent.com/"
+pathGithub <- "griu/mbdds_fc20/master/gestion_datos/www/"
+fileName   <- "Facebook_10_18_raw.csv"
+
 #Cargo los datos a un data frame
 df <- read_csv2(
-      "https://raw.githubusercontent.com/griu/mbdds_fc20/master/gestion_datos/www/Facebook_10_18_raw.csv",
-      locale = locale(
-                      decimal_mark = ",", 
-                      grouping_mark = "."
-                      )
+            paste0(urlRemote, pathGithub, fileName),
+            locale = locale(
+                            decimal_mark = ",", 
+                            grouping_mark = "."
+                        )
       )
 
 #Analizo las primeras observaciones
@@ -45,9 +50,9 @@ df %>%
 
 ```
 
-Este dataframe no es un conjunto de datos ordenado debido a que dentro de la columna indicador hay tres variables distintas: Facebook, Internet_por y poblacion. Por lo tanto no se cumple la máxima de Wickham que cada variable debe ser una columna. Tampoco cada fila es una observación, ya que se repite el país y año para cada una de las tres variables mencionadas. Por último, en cada una de las celdas de la columna indicador hay dos valores: un año y el nombre del indicador.Por lo tanto   no se cumple la característica de que toda celda debe contener un valor.
+Este dataframe no es un conjunto de datos ordenado debido a que dentro de la columna indicador hay tres variables distintas: Facebook, Internet_por y poblacion. Por lo tanto no se cumple la máxima de Wickham que cada variable debe ser una columna. Tampoco cada fila es una observación, ya que se repite el país y año para cada una de las tres variables mencionadas. Por último, en cada una de las celdas de la columna indicador hay dos valores: un año y el nombre del indicador. Por lo tanto no se cumple la característica de que toda celda debe contener un valor.
 
-Es necesario, entonces, trabajar y ordenar el dataframe para que sea un conjunto de datos ordenado, con cada fila siendo una observación, cada columna una variable, y cada celda poseer un valor único.
+Es necesario, entonces, trabajar y ordenar el dataframe para que sea un conjunto de datos ordenado, con cada fila siendo una observación, cada columna una variable, y cada celda con un valor único.
 
 # 2) Separa el año y el "indicador" en dos columnas separadas: anyo, variable. Presenta la tabla de las frecuencias de cada nueva variable.
 
@@ -66,7 +71,7 @@ df %>%
 
 ```
 
-Se observa que la variable anyo quedó como caracter, la paso a numérica, y también realizo la tabla de frecuencias de cada variable.
+Se observa que la variable anyo quedó como caracter, por lo que la paso a numérica, y también realizo la tabla de frecuencias de cada variable.
 
 ```{r tabla de frecuencias de anyo}
 
@@ -85,7 +90,7 @@ df %>%
       )
 ```
 
-Se observa que no hay ningún *NA* en la variable anyo, y que tengo la misma cantidad de observaciones en cada año.
+Se observa que no hay ningún *NA* en la variable anyo, y que tengo la misma cantidad de observaciones en cada uno.
 
 ```{r tabla de frecuencias de variable}
 
@@ -104,7 +109,7 @@ En esta tabla se observa que la columna variable tampoco tiene missings o *NA*. 
 
 # 3) Codifica el nombre de los países en una nueva columna "pais_r" donde, al analizar la tabla de frecuencias cada país, tenga frecuencia 6.
 
-Teniendo en cuenta que se muestran dos años, y son 3 indicadores para cada año, cada país ya debería aparecer 6 veces si se realiza el conteo por país. Si esto no sucede es que faltan datos de países (ya sea de algún año o algún indicador) y alguno esté más veces, o el mismo país está escrito con nombres distintos. Probablemente lo que suceda es esto último ya que vimos que las columnas año y variable estaban equidistribuidas. Para chequear esto, hago el conteo y filtro para ver todos aquellos países que tengan una frecuencia absoluta distinta a 6.
+Teniendo en cuenta que se muestran dos años, y son 3 indicadores para cada año, cada país ya debería aparecer 6 veces si se realiza el conteo por país. Si esto no sucede es que faltan datos de países (ya sea de algún año o algún indicador), o que alguno esté repetido, o el mismo país está escrito con nombres distintos. Probablemente lo que suceda es esto último ya que vimos que las columnas año y variable estaban equidistribuidas. Para chequear esto, hago el conteo y filtro para ver todos aquellos países que tengan una frecuencia absoluta distinta a 6.
 
 ```{r conteo países}
 
@@ -243,7 +248,7 @@ df %>%
 
 ```
 
-Estos países también quedaron con una observación por año.
+Estos países también quedaron con una observación por año, y sin ningún NA.
 
 Por lo tanto ya se tiene un conjunto de datos ordenado, donde cada fila es una observación (país y año), cada columna una variable, y cada celda un valor. Resta realizar el ***glimpse***.
 
@@ -269,12 +274,12 @@ df %>%
 
 ```
 
-El análisis de este summary lo realizo en la siguiente pregunta.
+El análisis del summary lo realizo en la siguiente pregunta.
 
 
 # 6) Analiza y comenta si observas alguna otra inconsistencia en los datos preparados.
 
-Del summary anterior, surgen algunas dudas de si hay inconsistencias o no.
+Del summary anterior, surgen algunas dudas de si hay inconsistencias o no, más que nada por los valores que asumen las variables Facebook y población.
 
 Se observa primero que nada que en la variable Internet_por hay un NA. Analizo en qué país se da el mismo.
 
@@ -286,76 +291,234 @@ df %>%
 
 ```
 
-Se observa que el NA corresponde a Taiwán y para el año 2010.
+Se observa que el NA corresponde a Taiwán y para el año 2010. Debido a que solo se exponen dos años para cada país, y que este indicador puede variar mucho de un año a otro, quizás no sería conveniente imputar el valor, y sería mejor sacar este país del análisis. 
 
-Dejando de lado el NA, en la variable Internet_por los valores de mínimo y máximo parecen razonables, ya que no hay más del 100% ni tampoco hay números negativos.
+Dejando de lado el NA, en la variable Internet_por los valores de mínimo y máximo parecen razonables, ya que no hay más del 100% ni tampoco hay números negativos. Si bien el valor mínimo (0,75%) está alejado de la media e incluso del primer cuartil, puede suceder que se trate de un país con poca penetración de internet. Analicemos de qué país se trata.
 
-En el caso de Facebook llama la atención el máximo que es de 300 millones, sobre todo si se lo compara con el tercer cuartil que es de 14 millones. Se puede analizar qué país es, lo cuál se realiza a continuación
+```{r mínimo Internet_por}
 
-```{r análisis 300 millones}
+df %>% 
+ filter(Internet_por==0.75)
+
+```
+Vemos que el mínimo de Internet_por se produce en Etiopía, lo cual parece coherente debido a que es uno de los países con menor PIB per cápita del mundo (ver <https://en.wikipedia.org/wiki/Ethiopia#Economy>).
+
+Se puede analizar si existen outliers, mediante un boxplot por año. Los outliers podrían observarse en este tipo de gráfico mediante puntos por debajo del bigote izquierdo del boxplot (es decir por debajo del primer cuartil menos 1,5 veces el rango intercuartílico o IQR), o por encima del bigote derecho (tercer cuartil más 1,5 veces el IQR).
+
+```{r boxplot Internet_por}
+
+df %>% 
+      ggplot(aes(x=Internet_por,y=anyo,group=anyo,fill=as.factor(anyo)))+
+      geom_boxplot()+
+      ggtitle(
+      "Boxplot de % de población usuaria de internet por año \n de países seleccionados")+
+      xlab("% de población usuaria de internet")+
+      ylab("Año")+
+      scale_y_continuous(breaks=c(2010,2018))+
+      theme(legend.position = "none")
+
+```
+Se observa que para esta variable no aparecen puntos ni a la izquierda ni a la derecha de los bigotes por lo que, según este criterio, no se observan outliers de esta variable.
+
+Además de las métricas ya analizadas, se pueden ver medidas de de dispersión, concentración y forma. Para estos cálculos remuevo el NA de Taiwán.
+
+```{r otras métricas Internet_por}
+df %>% 
+      select(anyo,x = Internet_por) %>% 
+      group_by(anyo) %>% 
+      summarise(
+            sd=sd(x,na.rm=T),
+            CV=sd(x,na.rm=T)/mean(x,na.rm=T),
+            asimetria=skewness(x,na.rm=T),
+            apuntamiento=kurtosis(x,na.rm=T)
+      ) 
+```
+El coeficiente de variación es menor al 80% en ambos años, por lo que se puede decir que es un conjunto de datos homogéneo. Por otra parte, en el 2010 la variable presenta cierta simetría ya que el coeficiente es cercano a 0, pero en 2018 la variable presenta asimetría negativa o hacia la izquierda. Por último, la distribución es leptocúrtica en ambos años ya que la curtosis es superior a 0.
+
+Analizando la variable Facebook llama la atención el máximo que es de 300 millones, sobre todo si se lo compara con el tercer cuartil que es de 14 millones, y con la mediana que es de 3,5 millones. Se puede analizar qué país es, lo cuál se realiza a continuación
+
+```{r análisis 300 millones Facebook}
 df %>% 
       filter(Facebook==max(Facebook))
 
 ```
 
-India es el país que tiene mayor cantidad absoluta de usuarios de Facebook, lo cual puede ser posible ya que este país cuenta con una población de 1.331 millones de habitantes en 2020 (<https://es.wikipedia.org/wiki/India#:~:text=1%20372%20065%20957%E2%80%8B%20hab.>). Llama la atención que en población diga 1.352.617. Esto es probablemente porque la población esté expresada en miles, lo que implicaría que en el 2018 India tenía 1.352 millones de personas. De todas maneras hablaré más adelante de la variable poblacion.
+India es el país que tiene mayor cantidad absoluta de usuarios de Facebook, lo cual es factible ya que este país cuenta con una población de 1.331 millones de habitantes en 2020 (<https://es.wikipedia.org/wiki/India#:~:text=1%20372%20065%20957%E2%80%8B%20hab.>). Llama la atención que en población diga 1.352.617. Esto es probablemente porque la población esté expresada en miles, lo que implicaría que en el 2018 India tenía 1.352 millones de personas. De todas maneras hablaré más adelante de la variable poblacion.
 
 Además de haber analizado ese máximo, puede resultar interesante ver un boxplot por año de la variable Facebook para analizar outliers.
 
-```{r boxplot}
+```{r boxplot Facebook}
 df %>% 
-      ggplot(aes(Facebook,group=anyo,fill= as.factor(anyo)))+
+      ggplot(aes(Facebook,y=anyo,group=anyo,fill= as.factor(anyo)))+
       geom_boxplot()+
-      ggtitle("Boxplot de cantidad de usuarios de facebook por año \n de países seleccionados")+
-      guides(fill=guide_legend(title="Año"))+
-      xlab("Cantidad de usuarios de facebook")
+      ggtitle(
+      "Boxplot de cantidad de usuarios de Facebook por año \n de países seleccionados")+
+      xlab("Cantidad de usuarios de Facebook")+
+      ylab("Año")+
+      scale_y_continuous(breaks=c(2010,2018))+
+      theme(legend.position = "none")
+
+```
+En los dos años hay outliers con valores elevados (los puntos que están a la derecha del bigote derecho de la caja). Esto es más evidente en el año 2018. Estos valores extremos pueden deberse o bien a la variabilidad del propio fenómeno en estudio o a problemas de medida de la variable, o un tipeo erróneo. En el caso extremo de India en el 2018 ya se vió que se debe a la naturaleza de la propia variable, ya que es un país con mucha población.
+
+De todas maneras se analiza para los dos años expuestos cuáles son estos outliers. Para ello utilizo el comando ***boxplot.stats***, con el cual puedo calcular los estadísticos que surgen del boxplot, entre ellos los cuartiles, los extremos de los bigotes y los outliers. Para determinar los outliers que estén por debajo o encima de 1.5, tengo que fijar el parámetro *coef* en ese número. Por otra parte luego tengo que llamar a $out para que me muestre los outliers.
+
+
+```{r detecto outliers de Facebook por año}
+outliers_facebook <- df%>% 
+                        group_by(anyo) %>% 
+                        filter(Facebook %in% boxplot.stats(Facebook, coef=1.5)$out) %>% 
+                        ungroup() %>% 
+                        arrange(desc(anyo),desc(Facebook))
+
+outliers_facebook
 
 ```
 
+Al ver los outliers  se observa que todos ellos tienen una cantidad de usuarios de Facebook coherente con respecto a su población (ver <https://es.wikipedia.org/wiki/Anexo:Pa%C3%ADses_y_territorios_dependientes_por_poblaci%C3%B3n>). Por lo que los valores elevados podrían deberse a la variabilidad del fenómeno en estudio (usuarios de Facebook por país). Eso no quita que no puedan existir errores de medición.
 
-En los dos años hay outliers con valores elevados (los puntos que están a la derecha del bigote derecho de la caja), es decir por encima del tercer cuartil más 1,5 veces el rango intercuartílico (IQR). Esto es más evidente en el año 2018. Estos valores extremos pueden deberse o bien a la variabilidad de la propia variable o a problemas de medida de la misma o un tipeo erróneo. En el caso extremo de India en el 2018 ya se vió que se debe a la naturaleza de la propia variable, ya que es un país con mucha población.
+En el boxplot se observa también una asimetría positiva, tal como se confirma en con el siguiente cálculo.
 
-De todas maneras se analiza para estos dos años cuáles son estos outliers. Para ello se calcula el primer cuartil, el tercero y el IQR para cada año.
-
-
-```{r}
-
-#Calculo quartiles para cada año
-q1_2010 = quantile(df$Facebook[df$anyo==2010],0.25)
-q3_2010 = quantile(df$Facebook[df$anyo==2010],0.75)
-q1_2018 = quantile(df$Facebook[df$anyo==2018],0.25)
-q3_2018 = quantile(df$Facebook[df$anyo==2018],0.75)
-
-#Calculo IQR para cada año
-IRQ2010 = q3_2010 - q1_2010 
-IRQ2018 = q3_2018 - q1_2018 
-
+```{r asimetría variable Facebook por año}
 df %>% 
-      filter(
-            (Facebook > q3_2018 +1.5*IRQ2018 & anyo==2018) |
-            (Facebook > q3_2010 +1.5*IRQ2010 & anyo==2010)
-            ) %>% 
-      arrange(desc(Facebook)) %>% 
-      arrange(desc(anyo),desc(Facebook))
+      group_by(anyo) %>% 
+      summarise(asimetría = skewness(Facebook))
 
 ```
 
-Al ver los outliers  se observa que todos ellos tienen una cantidad de usuarios de Facebook coherente con respecto a su población (ver <https://es.wikipedia.org/wiki/Anexo:Pa%C3%ADses_y_territorios_dependientes_por_poblaci%C3%B3n>). Por lo que los valores elevados podrían deberse a la variabilidad de la propia variable. Eso no quita que no puedan existir errores de medición.
+El coeficiente de asimetría para cada año es positivo, lo que implica que hay una asimetría positiva. En este tipo de distribución, resulta interesante hacer una transformación logarítmica de la misma y realizar nuevamente el boxplot.
+
+```{r boxplot con transformación logarítmica de Facebook}
+df %>% 
+      ggplot(aes(x=log(Facebook),y=anyo,fill= as.factor(anyo)))+
+      geom_boxplot( )+
+      ggtitle(
+            paste0(
+                  "Boxplot de logaritmo de cantidad de usuarios de Facebook por año  \n",
+                   "de países seleccionados")
+            )+
+      #Pongo texto a los outliers
+      geom_text(data=. %>% 
+                     group_by(anyo) %>% 
+                     filter(log(Facebook) %in% boxplot.stats(
+                                                            log(Facebook), coef=1.5)$out
+                            ),
+                aes(label=pais_r, x=log(Facebook)), 
+                nudge_x=0.1,  
+                size=2.5, 
+                hjust=0
+                ) +
+      xlab("Logaritmo de cantidad de usuarios de Facebook")+
+      ylab("Año")+
+      scale_y_continuous(breaks=c(2010,2018))+
+      theme(legend.position = "none")
+```
+Las distribuciones cambián drásticamente, y se observa solamente un outlier en el año 2010, que corresponde a Estados Unidos, país que ya se vió anteriormente tiene una cantidad de usuarios de esta red social consistente con su población.
+
+Se analizan también las restantes métricas de dispersión y forma.
+
+```{r otras métricas Facebook}
+df %>% 
+      select(anyo,x = Facebook) %>% 
+      group_by(anyo) %>% 
+      summarise(
+            sd=sd(x,na.rm=T),
+            CV=sd(x,na.rm=T)/mean(x,na.rm=T),
+            apuntamiento=kurtosis(x,na.rm=T)
+      ) 
+```
+El coeficiente de variación da muy por encima del 80% en ambos años, con lo cual la media no es representativa del conjunto de datos y los mismos son heterogéneos. La distribución es leptocúrtica debido a que el apuntamiento es mayor a 0.
 
 Resta analizar la población. Con respecto a esta variable se vió en el summary que tiene un mínimo de 318 y un máximo de 1.392.730. Los valores así expresados no tienen sentido con respecto a la población ya que, como se vió anteriormente, hay países con miles de millones de habitantes. Lo más probable que esté sucediendo, como ya fuera explicado, es que esta variable esté expresada en miles. Para chequear esto analizaré el país con menos población y el país con más población.
 
 ```{r población máximo y mínimo}
 df %>% 
-      filter(poblacion==max(poblacion) | poblacion == min(poblacion))
+      filter(poblacion == max(poblacion) | poblacion == min(poblacion))
 
 ```
-El país con mpas población es China en el 2018, que si multiplicaramos por mil la variable analizada tendría 1.392 millones de personas.En el caso de Islandia, tenía una población de 318 mil en 2010. Según Wikipedia ( <https://es.wikipedia.org/wiki/Anexo:Pa%C3%ADses_y_territorios_dependientes_por_poblaci%C3%B3n>) estos países tienen actualmente 1.420 millones y 375 mil personas respectivamente. Por lo tanto la información de esta variable si se la multiplica por mil parece coherente.
+El país con más población es China en el 2018, que si multiplicaramos por mil la variable analizada tendría 1.392 millones de personas. En el caso de Islandia, tenía una población de 318 mil en 2010. Según Wikipedia ( <https://es.wikipedia.org/wiki/Anexo:Pa%C3%ADses_y_territorios_dependientes_por_poblaci%C3%B3n>) estos países tienen actualmente 1.420 millones y 375 mil personas respectivamente. Por lo tanto la información de esta variable si se la multiplica por mil parece coherente.
+
+También en esta variable es posible realizar un boxplot para determinar outliers.
+
+```{r boxplot poblacion}
+df %>% 
+      ggplot(aes(poblacion,y=anyo,fill= as.factor(anyo)))+
+      geom_boxplot()+
+      ggtitle("Boxplot de poblacion por año de países seleccionados")+
+      xlab("Población")+
+      ylab("Año")+
+      scale_y_continuous(breaks=c(2010,2018))+
+      theme(legend.position = "none")
+```
+Se observan varios outliers con respecto a esta variable, siempre por encima del lado derecho del bigote del boxplot. A continuación se enumeran los mismos.
+
+```{r detecto outliers de población}
+outliers_poblacion <- df%>% 
+                        group_by(anyo) %>% 
+                        filter(poblacion %in% boxplot.stats(poblacion, coef=1.5)$out) %>% 
+                        ungroup() %>% 
+                        arrange(desc(anyo),desc(poblacion)) 
+
+outliers_poblacion
+
+```
+Los países expuestos son, justamente los más poblados del mundo, y coinciden con los expuestos en Wikipedia (<https://es.wikipedia.org/wiki/Anexo:Pa%C3%ADses_y_territorios_dependientes_por_poblaci%C3%B3n>), por lo que esta variable es consistente si se la multiplica por 1000.
+
+Al igual que con la variable Facebook se observan solo outliers a la derecha, dándose también una asimetría positiva tal como se observa en el coeficiente que se calcula a continuación.
+
+```{r asimetría población por año}
+df %>% 
+      group_by(anyo) %>% 
+      summarise(asimetría = skewness(poblacion))
+
+```
+Nuevamente conviene realizar una transformación logarítimica y realizar un boxplot con la misma.
+
+```{r boxplot con transformación logarítmica de poblacion}
+df %>% 
+      ggplot(aes(x=log(poblacion),y=anyo,fill= as.factor(anyo)))+
+      geom_boxplot( )+
+      ggtitle("Boxplot de logaritmo de poblacion por año de países seleccionados")+
+      #Pongo texto a los outliers
+      geom_text(data=. %>% 
+                     group_by(anyo) %>% 
+                     filter(log(poblacion) %in% 
+                                          boxplot.stats(
+                                                        log(poblacion), 
+                                                        coef=1.5)$out
+                            ),
+                aes(label=pais_r, x=log(poblacion)), 
+                nudge_x=0.1,  
+                size=2.5, 
+                hjust=0) +
+      xlab("Logaritmo de poblacion")+
+      ylab("Año")+
+      scale_y_continuous(breaks=c(2010,2018))+
+      theme(legend.position = "none")
+```
+Con la transformación logarítmica ya no se observan outliers, y la distribución es más simétrica.
+
+Resta analizar otras métricas de dispersión y forma.
+
+```{r otras métricas poblacion}
+df %>% 
+      select(anyo,x = poblacion) %>% 
+      group_by(anyo) %>% 
+      summarise(
+            sd=sd(x,na.rm=T),
+            CV=sd(x,na.rm=T)/mean(x,na.rm=T),
+            apuntamiento=kurtosis(x,na.rm=T)
+      ) 
+```
+El coeficiente de variación está por encima del 269% en ambos años, muy superior al valor de referencia del 80%, con lo cual es un conjunto de datos heterogéneo. Además la distribución es leptocúrtica, ya que la curtosis es superior a 0.
+
 
 # 7) Escribe cuatro líneas explicando (para un lector no técnico) la penetración de Facebook y de Internet en España.
 
 A continuación miro los indicadores para el caso de España. Creo dos nuevas variables indicadoras:
 
-      * la variable indicadora porcentaje de población que usa Facebook (para lo cual uso la variable poblacion multiplicada por mil)
+      * la variable indicadora porcentaje de población que usa Facebook (para lo cual uso la
+      variable poblacion multiplicada por mil)
 
       * porcentaje de internautas que usan Facebook
 
@@ -363,8 +526,11 @@ A continuación miro los indicadores para el caso de España. Creo dos nuevas va
 df %>% 
       filter(pais_r=="Spain") %>% 
       mutate(
+             #multiplico la población por mil
              pob_tot= poblacion*1000,
+             #calculo % de usuarios de Facebook sobre población
              Facebook_sobre_pob = 100 * Facebook/pob_tot,
+             #calculo % de internautas que usan Facebook
              Facebook_sob_int= Facebook_sobre_pob*100/Internet_por
       ) %>% 
       select(anyo, Internet_por,Facebook_sobre_pob,Facebook_sob_int)
@@ -372,4 +538,4 @@ df %>%
 
 ```
 
-En el año 2010 en España el 65,8% de las personas usaban internet, y de estas personas poco más de un tercio usaba Facebook. Desde ese año hasta el 2018 los usuarios de internet en España crecieron llegando a ser un 86,1% de la población de ese país. En el caso de Facebook los usuarios aumentaron más del doble, alcanzando a representar prácticamente la mitad de los españoles.
+En el año 2010 en España el 65,8% de las personas usaban internet, y de estas personas poco más de un tercio usaba Facebook. Desde ese año hasta el 2018 los usuarios de internet en España crecieron llegando a ser un 86,1% de la población de ese país. En el caso de Facebook los usuarios aumentaron más del doble, alcanzando a representar prácticamente la mitad de los habitantes del país.
